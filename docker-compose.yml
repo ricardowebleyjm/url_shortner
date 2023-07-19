@@ -10,3 +10,9 @@ services:
       - .:/code
     ports:
       - 9010:9010
+
+    networks:
+      - app-network
+
+networks:
+  app-network:
