@@ -31,10 +31,15 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS =env.list('ALLOWED_HOSTS')
+#ALLOWED_HOSTS =env.list('ALLOWED_HOSTS')
 
+if DEBUG:
+    ALLOWED_HOSTS = []
+else:
+    ALLOWED_HOSTS =env.list('ALLOWED_HOSTS')
 
 # Application definition
 
@@ -46,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'shortner',
+    'ui',
     'rest_framework',
 ]
 
@@ -64,7 +70,7 @@ ROOT_URLCONF = 'url_shortner.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -83,15 +89,31 @@ WSGI_APPLICATION = 'url_shortner.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {  
-    'default': {  
-        'ENGINE': env('ENGINE'),  
-        'NAME': env('DATABASE_NAME'),
-        'USER':env('DATABASE_USER'),  
-        'PASSWORD':env('DATABASE_PASS'),  
-        'HOST': env('DATABASE_HOST'),  
-        'PORT': env('DATABASE_PORT'),  
-    }  
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
+    
+else:
+
+    DATABASES = {  
+        'default': {  
+            'ENGINE': env('ENGINE'),  
+            'NAME': env('DATABASE_NAME'),
+            'USER':env('DATABASE_USER'),  
+            'PASSWORD':env('DATABASE_PASS'),  
+            'HOST': env('DATABASE_HOST'),  
+            'PORT': env('DATABASE_PORT'),  
+        }  
+    }
+    
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    )
 }
 
 

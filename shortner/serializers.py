@@ -10,8 +10,8 @@ class URLSerializer(serializers.Serializer):
     def generate_shortened_url(self):
             characters = string.ascii_letters + string.digits
             url = ''.join(random.choice(characters) for _ in range(7))
-            scheme = self._context['request']._stream._current_scheme_host + str("/") + url
-            return scheme
+            #scheme = self._context['request']._stream._current_scheme_host + str("/") + url
+            return url
         
         
     def create(self, validated_data):

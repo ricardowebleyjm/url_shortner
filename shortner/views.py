@@ -16,7 +16,8 @@ class URLShortenAPIView(APIView):
         serializer = URLSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             url = serializer.save()
-            return Response({'shortened_url': url.shortened_url}, status=status.HTTP_201_CREATED)
+            res = URLSerializerResponse(url)
+            return Response(res.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -32,3 +33,14 @@ class URLRedirectAPIView(APIView):
             return Response({'original_url': url.original_url}, status=status.HTTP_200_OK)
         except URL.DoesNotExist:
             return Response({'detail': 'URL not found'}, status=status.HTTP_404_NOT_FOUND)
+
+def redirect_path(request, shortened_url:str):
+        from django.shortcuts import redirect
+        url = URL.objects.get(shortened_url=shortened_url)
+        url.click_count += 1
+        url.save()
+        click = Click(url=url, ip_address=request.META['REMOTE_ADDR'])
+        click.save()
+        original_url = url.original_url
+        response = redirect(original_url)
+        return response
