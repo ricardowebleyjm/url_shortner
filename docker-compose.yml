@@ -10,7 +10,7 @@ services:
     volumes:
       - .:/code
     ports:
-      - 9010:9010
+      - 8000:8000
 
     networks:
       - app-network

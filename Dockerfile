@@ -19,5 +19,5 @@ WORKDIR /code
 COPY entrypoint.sh /src/
 COPY . /code
 
-EXPOSE 9010
+EXPOSE 8000
 ENTRYPOINT ["sh", "entrypoint.sh"]
