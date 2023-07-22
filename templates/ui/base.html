@@ -5,16 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Shortener</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+
+<style>
+    [x-cloak] { 
+        display: none !important;
+    }   
+</style>
 </head>
 <body>
-    <div class="container" d="app" x-data="app" x-init="fetchTableData">
+    <div x-cloak class="container" x-data="app" x-init="fetchTableData">
         <h2>URL Shortner</h2>
-        <form @submit.prevent="submitForm" class="my-4 form-inline">
+        <form @submit.prevent="submitForm" class="my-4" novalidate>
             {% csrf_token %}
             <label for="url" class="sr-only">URL:</label>
-            <input type="text" id="url" x-model="url" class="form-control col mr-2" required>
-            <button class="btn btn-primary" type="submit">Shorten</button>
+            <input type="text" id="url" x-model="url" @input="urlIsValid = true" class="form-control col mr-2" required />
+            <div x-bind:class="{ 'invalid-feedback d-block': !urlIsValid, 'd-none': urlIsValid }">
+                Invalid URL
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    <button class="btn btn-primary btn-block" type="submit">Shorten</button>
+                </div>
+            </div>
         </form>
+        <div class="my-4">
+            <button @click="refreshTableData" class="btn btn-warning">Refresh</button>
+        </div>
 
         <div x-show="tableData.length === 0">
             Loading table data...
@@ -41,47 +57,72 @@
         </table>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
-<script>
-    // Alpine.js code
-    const app = {
-        url: '',
-        csrf_token: document.querySelector('input[name="csrfmiddlewaretoken"]').value,
-        tableData: [], // To hold the data for the table
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+    <script>
+        // Alpine.js code
+        const app = {
+            url: '',
+            csrf_token: document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+            tableData: [], // To hold the data for the table
+            urlIsValid: true, // Set to true by default
 
-        async fetchTableData() {
-            try {
-                const response = await fetch('/api/v1/shortner/');
-                const data = await response.json();
-                this.tableData = data;
-            } catch (error) {
-                console.error('Error fetching table data:', error);
-            }
-        },
+            isValidURL(url) {
+                try {
+                    new URL(url);
+                    return true;
+                } catch (error) {
+                    return false;
+                }
+            },
 
-        async submitForm() {
-            try {
-                const response = await fetch('/api/v1/shortner/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': this.csrf_token,
-                    },
-                    body: JSON.stringify({
-                        url: this.url
-                    }),
-                });
-                const data = await response.json();
-                this.tableData.push(data);
-                // Clear the form input
-                this.url = '';
-            } catch (error) {
-                console.error('Error submitting form:', error);
-            }
-        },
-    };
+            async fetchTableData() {
+                try {
+                    const response = await fetch('/api/v1/shortner/');
+                    const data = await response.json();
+                    this.tableData = data;
+                } catch (error) {
+                    console.error('Error fetching table data:', error);
+                }
+            },
 
-    window.app = app; // Expose the Alpine.js app to the global scope
-</script>
+            async submitForm() {
+                if (!this.isValidURL(this.url)) {
+                    this.urlIsValid = false;
+                    return;
+                }
+
+                try {
+                    this.urlIsValid = true;
+                    const response = await fetch('/api/v1/shortner/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.csrf_token,
+                        },
+                        body: JSON.stringify({
+                            url: this.url
+                        }),
+                    });
+                    const data = await response.json();
+                    this.tableData.unshift(data);
+                    // Clear the form input
+                    this.url = '';
+                } catch (error) {
+                    console.error('Error submitting form:', error);
+                }
+            },
+            async refreshTableData() {
+                try {
+                    const response = await fetch('/api/v1/shortner/');
+                    const data = await response.json();
+                    this.tableData = data;
+                } catch (error) {
+                    console.error('Error fetching table data:', error);
+                }
+            },
+        };
+
+        window.app = app; // Expose the Alpine.js app to the global scope
+    </script>
 </body>
 </html>
